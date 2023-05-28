@@ -27,15 +27,17 @@ contract MUTEnsRegistry is ERC721, Ownable, Pausable {
     }
 
     function registerDomain(string memory domain, string memory muteAddress, address resolver) external onlyDomainOwner(domain) {
-        // Registration logic here...
-        domains[domain] = Domain(_msgSender(), domains[domain].tokenId, muteAddress, resolver);
-        emit DomainRegistered(domain, _msgSender(), domains[domain].tokenId, muteAddress, resolver);
+        require(domains[domain].owner == address(0), "Domain already registered");
+        uint256 tokenId = totalSupply() + 1; // Increment tokenId for each new domain
+        _mint(_msgSender(), tokenId); // Mint new NFT for the domain
+        domains[domain] = Domain(_msgSender(), tokenId, muteAddress, resolver);
+        emit DomainRegistered(domain, _msgSender(), tokenId, muteAddress, resolver);
     }
 
     function transferDomain(string memory domain, address newOwner) external onlyDomainOwner(domain) {
-        // Transfer logic here...
+        require(newOwner != address(0), "New owner address cannot be 0");
+        _transfer(_msgSender(), newOwner, domains[domain].tokenId); // Transfer NFT ownership
         domains[domain].owner = newOwner;
         emit DomainTransferred(domain, newOwner);
     }
 }
-
