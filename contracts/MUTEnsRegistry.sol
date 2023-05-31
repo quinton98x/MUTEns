@@ -46,3 +46,4 @@ contract MUTEnsRegistry is Ownable {
         emit DomainTransferred(domain, msg.sender, to);
     }
 }
+
