@@ -8,6 +8,8 @@ contract MUTEnsDiscount is Ownable {
     IERC20 public muteToken;
     MUTEnsRegistry public registry;
 
+    uint256 public deploymentTime;
+
     enum Rank {
         Diamond, // 0
         Platinum, // 1
@@ -22,6 +24,7 @@ contract MUTEnsDiscount is Ownable {
     constructor(IERC20 _muteToken, MUTEnsRegistry _registry) {
         muteToken = _muteToken;
         registry = _registry;
+        deploymentTime = block.timestamp;
     }
 
     function updateRank(address account) public {
@@ -44,6 +47,12 @@ contract MUTEnsDiscount is Ownable {
     function mintDomain(string memory domain, string memory muteAddress, address resolver) public {
         updateRank(msg.sender);
         require(bytes(domain).length <= uint256(rankOf[msg.sender]) + 1, "Domain length exceeds your rank limit");
+        
+        // If the contract has been live for less than a month, only allow wallets with Mute coins to mint domains
+        if (block.timestamp < deploymentTime + 30 days) {
+            require(muteToken.balanceOf(msg.sender) > 0, "Only wallets with Mute coins can mint domains during the first month");
+        }
+
         registry.registerDomain(domain, muteAddress, resolver);
     }
 }
