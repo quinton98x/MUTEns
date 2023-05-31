@@ -13,11 +13,15 @@ contract MUTEnsBulkRenewal is Ownable {
         fees = _fees;
     }
 
-    function renew(string[] memory domains) public payable {
-        require(msg.value == domains.length * fees.getRegistrationFee(), "Renewal fee does not match the required fee");
-        for (uint i = 0; i < domains.length; i++) {
-            registry.registerDomain(domains[i], "", address(this));
+    function renewDomains(string[] memory domains) public payable {
+        uint256 totalFee = 0;
+        for (uint256 i = 0; i < domains.length; i++) {
+            totalFee += fees.getRegistrationFee(bytes(domains[i]).length);
+        }
+        require(msg.value == totalFee, "Renewal fee does not match the required fee");
+
+        for (uint256 i = 0; i < domains.length; i++) {
+            registry.renewDomain(domains[i]);
         }
     }
 }
-
