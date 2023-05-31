@@ -15,11 +15,11 @@ function getRegistrationFee(uint256 length) public pure returns (uint256) {
         if (length == 1) {
             return 1 ether;
         } else if (length == 2) {
-            return 0.1 ether;
+            return 0.3 ether;
         } else if (length == 3) {
-            return 0.01 ether;
+            return 0.03 ether;
         } else {
-            return 0.001 ether;
+            return 0.003 ether;
         }
     }
 
