@@ -1,43 +1,48 @@
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract MUTEnsRegistry is ERC721, Ownable, Pausable {
+contract MUTEnsRegistry is Ownable {
     struct Domain {
         address owner;
         uint256 tokenId;
         string muteAddress;
         address resolver;
+        uint256 expiry;
     }
 
     mapping(string => Domain) public domains;
-    mapping(address => bool) public hasClaimedFreeDomain;
 
-    event DomainRegistered(string domain, address indexed owner, uint256 tokenId, string muteAddress, address resolver);
-    event DomainTransferred(string domain, address indexed newOwner);
+    uint256 private _currentTokenId = 0;
 
-    constructor() ERC721("MUTE Domain Name Service", "MUTEns") {}
+    event DomainRegistered(string domain, string muteAddress, address owner, address resolver, uint256 expiry);
+    event DomainRenewed(string domain, uint256 newExpiry);
+    event DomainTransferred(string domain, address from, address to);
 
-    // Permits modifications only by the owner of the specified node.
-    modifier onlyDomainOwner(string memory domain) {
-        require(domains[domain].owner == _msgSender(), "Caller is not the owner");
-        _;
+    function registerDomain(string memory domain, string memory muteAddress, address resolver) public onlyOwner {
+        uint256 newTokenId = _currentTokenId + 1; // Increment tokenId for each new domain
+        _currentTokenId = newTokenId;
+
+        uint256 expiry = block.timestamp + 31536000; // Set domain to expire in 1 year
+
+        domains[domain] = Domain(msg.sender, newTokenId, muteAddress, resolver, expiry);
+
+        emit DomainRegistered(domain, muteAddress, msg.sender, resolver, expiry);
     }
 
-    function registerDomain(string memory domain, string memory muteAddress, address resolver) external onlyDomainOwner(domain) {
-        require(domains[domain].owner == address(0), "Domain already registered");
-        uint256 tokenId = totalSupply() + 1; // Increment tokenId for each new domain
-        _mint(_msgSender(), tokenId); // Mint new NFT for the domain
-        domains[domain] = Domain(_msgSender(), tokenId, muteAddress, resolver);
-        emit DomainRegistered(domain, _msgSender(), tokenId, muteAddress, resolver);
+    function renewDomain(string memory domain) public {
+        require(msg.sender == domains[domain].owner, "Only the owner can renew the domain");
+
+        domains[domain].expiry += 31536000; // Extend the domain's expiry by 1 year
+
+        emit DomainRenewed(domain, domains[domain].expiry);
     }
 
-    function transferDomain(string memory domain, address newOwner) external onlyDomainOwner(domain) {
-        require(newOwner != address(0), "New owner address cannot be 0");
-        _transfer(_msgSender(), newOwner, domains[domain].tokenId); // Transfer NFT ownership
-        domains[domain].owner = newOwner;
-        emit DomainTransferred(domain, newOwner);
+    function transferDomain(string memory domain, address to) public {
+        require(msg.sender == domains[domain].owner, "Only the owner can transfer the domain");
+
+        domains[domain].owner = to;
+
+        emit DomainTransferred(domain, msg.sender, to);
     }
 }
