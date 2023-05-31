@@ -10,9 +10,9 @@ contract MUTEnsTransfer is Ownable {
         registry = _registry;
     }
 
-    function transfer(string memory domain, address newOwner) public {
-        require(registry.owner(domain) == msg.sender, "Caller is not the owner of the domain");
-        registry.transferDomain(domain, newOwner);
+    function transferDomain(string memory domain, address to) public {
+        (address domainOwner,,,,) = registry.domains(domain);
+        require(domainOwner == msg.sender, "Caller is not the owner of the domain");
+        registry.transferDomain(domain, to);
     }
 }
-
