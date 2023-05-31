@@ -7,10 +7,11 @@ contract MUTEnsFees is Ownable {
     IERC20 public muteCoin;
 
     constructor() {
-        muteCoin = IERC20(0xa49d7499271ae71cd8ab9ac515e6694c755d400c);
+muteCoin = IERC20(0xA49d7499271aE71cd8aB9Ac515e6694C755d400c);
+
     }
 
-    function getRegistrationFee(uint256 length) public view returns (uint256) {
+function getRegistrationFee(uint256 length) public pure returns (uint256) {
         if (length == 1) {
             return 1 ether;
         } else if (length == 2) {
