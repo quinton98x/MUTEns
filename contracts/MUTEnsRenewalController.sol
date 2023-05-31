@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MUTEnsRegistry.sol";
 import "./MUTEnsFees.sol";
 
-contract MUTEnsRenewalController is Ownable {
+contract MUTEnsBulkRenewal is Ownable {
     MUTEnsRegistry public registry;
     MUTEnsFees public fees;
 
@@ -13,9 +13,16 @@ contract MUTEnsRenewalController is Ownable {
         fees = _fees;
     }
 
-    function renew(string memory domain) public payable {
-        require(msg.value == fees.getRegistrationFee(), "Renewal fee does not match the required fee");
-        registry.registerDomain(domain, "", address(this));
+    function renewDomains(string[] memory domains) public payable {
+        uint256 totalFee = 0;
+        for (uint256 i = 0; i < domains.length; i++) {
+totalFee += fees.getRegistrationFee(bytes(domains[i]).length);
+
+        }
+        require(msg.value == totalFee, "Renewal fee does not match the required fee");
+
+        for (uint256 i = 0; i < domains.length; i++) {
+            registry.renewDomain(domains[i]);
+        }
     }
 }
-
